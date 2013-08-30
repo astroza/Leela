@@ -1,0 +1,9 @@
+[Unit]
+Description=V4 Monitor
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/v4_monitor
+
+[Install]
+WantedBy=multi-user.target
