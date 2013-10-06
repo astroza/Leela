@@ -27,7 +27,7 @@
 static int sensor_fd = -1;
 static const char analog_device[] = "/sys/devices/ocp.2/helper.11/AIN5";
 
-int deep_sensor_open()
+int depth_sensor_open()
 {
 	int slots_fd;
 	sensor_fd = open(analog_device, O_RDONLY);
@@ -35,6 +35,7 @@ int deep_sensor_open()
 	if(sensor_fd == -1) {
 		slots_fd = open("/sys/devices/bone_capemgr.8/slots", O_WRONLY); 
 		write(slots_fd, "cape-bone-iio", 13);
+		close(slots_fd);
 		sensor_fd = open(analog_device, O_RDONLY);
 		if(sensor_fd == -1) {
 			fputs("Can't open analog sensor", stderr);
@@ -46,7 +47,7 @@ int deep_sensor_open()
 
 #define SENSOR_SAMPLES 	10
 
-unsigned int deep_sensor_read()
+unsigned int depth_sensor_read()
 {
 	char buffer[64];
 	unsigned int samples[SENSOR_SAMPLES];
@@ -97,9 +98,9 @@ unsigned int deep_sensor_read()
 #ifdef UNIT_TEST
 int main()
 {
-	deep_sensor_open();
+	depth_sensor_open();
 	while(1) {
-		printf("value=%u\n", deep_sensor_read());
+		printf("value=%u\n", depth_sensor_read());
 		sleep(1);
 	}
 	return 0;
