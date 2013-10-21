@@ -46,11 +46,18 @@ class Wheel {
 		Wheel(short vel_id, const SContAdjust &velocity_adjust, bool power_off_in_rest=true);
 };
 
-#define FORWARD 0
-#define ROTATE 1
+#define IDLE	0
+#define FORWARD 1
+#define ROTATE 	2
 
 class Navig {
+	private:
+		int action;
+		short rotate_sign;
+		double rotate_start_pos;
+		double rotate_distance;
 	public:
+		bool rotate_with_angle(short angle);
 		bool rotate(short velocity);
 		/* velocity de -100 a 100 y radious de 0 a 100 */
 		bool forward(short velocity, float rudder);

@@ -25,7 +25,7 @@
 #include <math.h>
 
 static int sensor_fd = -1;
-static const char analog_device[] = "/sys/devices/ocp.2/helper.11/AIN5";
+static const char analog_device[] = "/sys/devices/ocp.2/helper.13/AIN5";
 
 int depth_sensor_open()
 {

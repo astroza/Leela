@@ -24,6 +24,7 @@ using namespace std;
 
 extern "C" {
 #include <v4.h>
+#include <mouse.h>
 }
 
 SContAdjust::SContAdjust(short forward_adjust, short backward_adjust, bool reverse)
@@ -95,6 +96,32 @@ bool Navig::rotate(short velocity)
 	return true;
 }
 
+bool Navig::rotate_with_angle(short angle)
+{
+	double advanced;
+	if(action != ROTATE) {
+		rotate_start_pos = mouse_x_pos;
+		rotate_distance = angle*(21/90.0);
+		rotate_sign = angle/fabs(angle);
+		action = ROTATE;
+	}
+	advanced = mouse_x_pos - rotate_start_pos;
+#ifdef DEBUG
+	cout << "ROTATE ADVANCED: " << advanced << endl;
+#endif
+	if(advanced < rotate_distance/2.0) {
+		rotate(rotate_sign*60);
+		return true;
+	} else if(advanced < rotate_distance) {
+		rotate(rotate_sign*10);
+		return true;
+	} else {
+		stop();
+		action = IDLE;
+	}
+	return false;
+}
+
 bool Navig::forward(short velocity, float rudder)
 {
 	float d = 0.5-rudder;
@@ -113,5 +140,7 @@ bool Navig::stop()
 
 Navig::Navig()
 {
+	action = IDLE;
 	v4_open();
+	mouse_open();
 }

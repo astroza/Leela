@@ -1,5 +1,5 @@
 CC=gcc
-#CFLAGS=-Wall -DDEBUG
+#CFLAGS=-Wall
 CFLAGS=-Wall
 INSTALL_DIR=/usr
 
