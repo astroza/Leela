@@ -1,5 +1,5 @@
 CPP=g++
-CFLAGS=-Wall -DDEBUG
+CFLAGS=-Wall -DDEBUG -g
 
 all: automata.o
 
@@ -7,7 +7,7 @@ install: all
 	$(CPP) automata.o -shared -o /usr/lib/libautom.so
 	cp automata.h /usr/include
 
-%.o: %.cpp
+%.o: %.cc
 	$(CPP) -c $(CFLAGS) $< -o $@
 
 clean:

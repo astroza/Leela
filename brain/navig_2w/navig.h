@@ -49,18 +49,21 @@ class Wheel {
 #define IDLE	0
 #define FORWARD 1
 #define ROTATE 	2
+#define ADVANCE 3
 
 class Navig {
 	private:
 		int action;
-		short rotate_sign;
-		double rotate_start_pos;
-		double rotate_distance;
+		short ra_sign;
+		double ra_start_pos;
+		double ra_distance;
 	public:
+		float to_rudder_value(float num, float denom);
 		bool rotate_with_angle(short angle);
 		bool rotate(short velocity);
 		/* velocity de -100 a 100 y radious de 0 a 100 */
 		bool forward(short velocity, float rudder);
+		bool advance(double distance);
 		bool stop();
 		Navig();
 };

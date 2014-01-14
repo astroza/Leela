@@ -96,24 +96,28 @@ bool Navig::rotate(short velocity)
 	return true;
 }
 
+/* Algunas veces es muy violento al comenzar el giro y la cola del robot queda en el aire, eso impide
+ * que el mouse pueda leer el suelo
+ */
 bool Navig::rotate_with_angle(short angle)
 {
 	double advanced;
 	if(action != ROTATE) {
-		rotate_start_pos = mouse_x_pos;
-		rotate_distance = angle*(21/90.0);
-		rotate_sign = angle/fabs(angle);
+		ra_start_pos = mouse_x_pos;
+		ra_distance = fabs(angle)*(21/90.0);
+		ra_sign = angle/fabs(angle);
 		action = ROTATE;
+		rotate(ra_sign*10);
 	}
-	advanced = mouse_x_pos - rotate_start_pos;
+	advanced = fabs(mouse_x_pos - ra_start_pos);
 #ifdef DEBUG
-	cout << "ROTATE ADVANCED: " << advanced << endl;
+	cout << "[rotate_distance]=" << rotate_distance << " [ROTATE ADVANCED]=" << advanced << endl;
 #endif
-	if(advanced < rotate_distance/2.0) {
-		rotate(rotate_sign*60);
+	if(advanced < ra_distance*0.3) {
+			rotate(ra_sign*10);
 		return true;
-	} else if(advanced < rotate_distance) {
-		rotate(rotate_sign*10);
+	} else if(advanced < ra_distance) {
+			rotate(ra_sign*10);
 		return true;
 	} else {
 		stop();
@@ -122,9 +126,46 @@ bool Navig::rotate_with_angle(short angle)
 	return false;
 }
 
+bool Navig::advance(double distance)
+{
+	double advanced;
+
+	if(action != ADVANCE) {
+		ra_start_pos = mouse_y_pos;
+		ra_distance = fabs(distance);
+		ra_sign = ra_distance/distance;
+		action = ADVANCE;
+	}
+	advanced = fabs(mouse_y_pos - ra_start_pos);
+        cout << "[distance]=" << ra_distance << " [ADVANCED]=" << advanced << endl;
+	if(advanced < ra_distance*0.6 && ra_distance-advanced > 3 && ra_sign > 0) {
+		forward(ra_sign*60, 0.5);
+		return true;
+	} else if(advanced < ra_distance) {
+		forward(ra_sign*30, 0.5);
+		return true;
+	} else {
+		stop();
+		action = IDLE;
+	}
+	return false;
+}
+
+float Navig::to_rudder_value(float num, float denom)
+{              
+ 	float max_value = num > denom ? num : denom;
+
+        return (100.0*(num/max_value)) / (100.0*(denom/max_value));
+}
+
 bool Navig::forward(short velocity, float rudder)
 {
 	float d = 0.5-rudder;
+
+#ifdef DEBUG
+	cout << "wheels[0].velocity_set(" << (0.5+d)*velocity << ")" << endl;
+	cout << "wheels[1].velocity_set(" << (0.5-d)*velocity << ")" << endl;
+#endif
 
 	wheels[0].velocity_set((0.5+d)*velocity);
 	wheels[1].velocity_set((0.5-d)*velocity);

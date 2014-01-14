@@ -61,9 +61,9 @@ unsigned int depth_sensor_read()
 		ret = read(sensor_fd, buffer, sizeof(buffer));
 		if(ret == -1) {
 			fputs("Error while trying to read analog sensor", stderr);
-			exit(-1);
-		}
-		samples[i] = strtoul(buffer, NULL, 10);
+			samples[i] = 0;
+		} else
+			samples[i] = strtoul(buffer, NULL, 10);
 #ifdef DEBUG
 		printf("samples[%d]=%u\n", i, samples[i]);
 #endif
