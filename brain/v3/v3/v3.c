@@ -29,6 +29,7 @@
 #include <unistd.h>
 #include <semaphore.h>
 #include <sys/time.h>
+#include <sys/wait.h>
 
 static const char v3_tty[] = "/dev/ttyO1";
 static v3_servo v3_servos[12];
@@ -87,17 +88,30 @@ void v3_work()
 	v3_msgs_count = 0;
 }
 
+static void launch_init_script()
+{
+        int pid, status;
+        char *script_path = "/usr/lib/v3/init.sh";
+        char *const args[] = {script_path, NULL};
+
+        pid = fork();
+        if(pid == 0) {
+		exit(execv(script_path, args));
+        } else {
+                waitpid(pid, &status, 0);
+                if(WEXITSTATUS(status) != 0) {
+                        puts("V3: Init script execution has an error");
+                        exit(1);
+                }
+        }
+}
+
 int v3_open()
 {
 	struct termios term;
 	int fd, i;
 
-	fd = open("/sys/kernel/debug/omap_mux/uart1_rxd", O_WRONLY);
-	write(fd, "20\n", 3);
-	close(fd);
-	fd = open("/sys/kernel/debug/omap_mux/uart1_txd", O_WRONLY);
-	write(fd, "0\n", 2);
-	close(fd);
+	launch_init_script();
 
 	fd = open(v3_tty, O_RDWR);
 	if(fd == -1) {
