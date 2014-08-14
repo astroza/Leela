@@ -88,7 +88,7 @@ void v3_work()
 	v3_msgs_count = 0;
 }
 
-static void launch_init_script()
+void v3_launch_init_script()
 {
         int pid, status;
         char *script_path = "/usr/lib/v3/init.sh";
@@ -111,7 +111,7 @@ int v3_open()
 	struct termios term;
 	int fd, i;
 
-	launch_init_script();
+	v3_launch_init_script();
 
 	fd = open(v3_tty, O_RDWR);
 	if(fd == -1) {

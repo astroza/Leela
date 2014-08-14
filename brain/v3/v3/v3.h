@@ -39,6 +39,7 @@ typedef struct {
 typedef enum { RIGHT=0, LEFT } v3_side;
 
 int v3_open();
+void v3_launch_init_script();
 int v3_servo_set(int servo_id, short value);
 int v3_servo_disconnect(int servo_id);
 void v3_work();
