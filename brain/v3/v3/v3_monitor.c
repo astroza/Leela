@@ -34,6 +34,8 @@ int main()
 	int v3_fd, inotify_fd, i;
 	v3_msg msg;
 
+	v3_launch_init_script();
+
 	msg.cmd = 'D';
 	inotify_fd = inotify_init();
 	if(inotify_fd == -1) {
@@ -46,7 +48,6 @@ int main()
 		return EXIT_FAILURE;
 	}
 
-	v3_launch_init_script();
 	v3_fd = open(v3_device_name_get(), O_RDWR);
 
 	do {
