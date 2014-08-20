@@ -34,18 +34,25 @@
 static const char v3_tty[] = "/dev/ttyO1";
 static v3_servo v3_servos[12];
 static v3_msg *v3_msgs[12];
+static v3_response v3_resps[12];
 static unsigned int v3_msgs_count = 0;
 static int v3_fd = -1;
+static unsigned short v3_analog_values[8];
+static unsigned short v3_analog_inputs_bits = 0;
 
-static int  __v3_send_msgs(v3_msg **msgs, unsigned int msgs_count)
+static int  __v3_send_msgs(int wait_response)
 {
 	struct timeval tv;
 	fd_set read_fds;
-	char resp[msgs_count];
-	unsigned int resp_count = 0;
+	int read_bytes = 0;
+	int bytes_to_read;
 	int ret;
 	struct iovec msgs_vec[12];
 	unsigned int i;
+
+	v3_msg **msgs = v3_msgs;
+	unsigned int msgs_count = v3_msgs_count;
+	v3_msgs_count = 0;
 
 	for(i = 0; i < msgs_count; i++) {
 		msgs_vec[i].iov_base = msgs[i];
@@ -57,21 +64,26 @@ static int  __v3_send_msgs(v3_msg **msgs, unsigned int msgs_count)
 		return -1;
 	}
 
+	if(!wait_response)
+		return 0;
+
 	tv.tv_sec = 1;
 	tv.tv_usec = 0;
 
+	bytes_to_read = sizeof(v3_response)*msgs_count;
 	do {
 		FD_ZERO(&read_fds);
                 FD_SET(v3_fd, &read_fds);                      
                 if(select(v3_fd + 1, &read_fds, NULL, NULL, &tv) < 1)
 			return -1;
-		ret = read(v3_fd, resp+resp_count, msgs_count);
+		ret = read(v3_fd, ((void *)&v3_resps) + read_bytes, bytes_to_read);
 		if(ret == -1) {
 			perror("read");
 			return -1;
 		}
-		resp_count += ret;
-	} while(resp_count < msgs_count);
+		read_bytes += ret;
+		bytes_to_read -= ret;
+	} while(bytes_to_read > 0);
 
 	return 0;
 }
@@ -79,13 +91,36 @@ static int  __v3_send_msgs(v3_msg **msgs, unsigned int msgs_count)
 void v3_work()
 {
 	int i;
+
+	// Servos
 	if(v3_msgs_count > 0) {
 		for(i = 0; i < v3_msgs_count; i++)
-			v3_servos[(int)v3_msgs[i]->motor].has_next_msg = 0;
+			v3_servos[(int)v3_msgs[i]->sel].has_next_msg = 0;
 
-		__v3_send_msgs(v3_msgs, v3_msgs_count);
+		__v3_send_msgs(0);
+
 	}
-	v3_msgs_count = 0;
+
+	// Analog inputs
+	v3_msg ar_msgs[8];
+	v3_msg *msg;
+	int ar_count;
+	for(i = 0; i < 8; i++) {
+		if(v3_analog_inputs_bits & (1 << i)) {
+			msg = ar_msgs + i;
+			msg->cmd = 'A';
+			msg->sel = (char)i;
+			msg->arg = 0;
+			v3_msgs[v3_msgs_count++] = msg;
+		}
+	}
+	ar_count = v3_msgs_count;
+	if(v3_msgs_count > 0 && __v3_send_msgs(1) == 0) {
+		for(i = 0; i < ar_count; i++) {
+			if(v3_resps[i].status == 'K')
+				v3_analog_values[(int)v3_msgs[i]->sel] = v3_resps[i].data;
+		}
+	}
 }
 
 void v3_launch_init_script()
@@ -104,6 +139,19 @@ void v3_launch_init_script()
                         exit(1);
                 }
         }
+}
+
+void v3_analog_inputs_enable(unsigned short bits)
+{
+	v3_analog_inputs_bits = bits;
+}
+
+int v3_analog_read(int input) 
+{
+	if(v3_analog_inputs_bits & (1 << input)) {
+		return v3_analog_values[input];
+	}
+	return -1;
 }
 
 int v3_open()
@@ -163,7 +211,7 @@ int v3_servo_disconnect(int servo_id)
 	v3_servos[servo_id].current_value = -1;
 	
       	msg->cmd = 'D';
-        msg->motor = servo_id;
+        msg->sel = servo_id;
 	old_has_next_msg = v3_servos[servo_id].has_next_msg;
 	v3_servos[servo_id].has_next_msg = 1;
 
@@ -185,7 +233,7 @@ int v3_servo_set(int servo_id, short value)
 #endif
 	v3_servos[servo_id].current_value = value;
        	msg->cmd = 'S';
-        msg->motor = servo_id;
+        msg->sel = servo_id;
 	msg->arg = value;
 	old_has_next_msg = v3_servos[servo_id].has_next_msg;
 	v3_servos[servo_id].has_next_msg = 1;

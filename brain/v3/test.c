@@ -22,6 +22,7 @@
 int main()
 {
 	v3_open();
+	v3_analog_inputs_enable(V3_A0|V3_A1|V3_A2);
 	short val0, val1;
 	int ret;
 	char cmd;
@@ -34,6 +35,8 @@ int main()
 		else if(cmd == 's') {
 			scanf("%hd", &val1);
 			v3_servo_set(val0, val1);
+		} else if(cmd == 'a') {
+			printf("value=%d\n", v3_analog_read(val0));
 		}
 		v3_work();
 	} while(1);

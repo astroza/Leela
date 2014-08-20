@@ -58,7 +58,7 @@ int main()
 		usleep(500000);
 		ioctl(v3_fd, TCFLSH, 0); /* Ignoro las respuestas en la input queue */
 		for(i = 0; i < 12; i++) {
-			msg.motor = i;
+			msg.sel = i;
 			write(v3_fd, &msg, sizeof(msg));
 		}
 	} while(1);

@@ -23,11 +23,25 @@
 #include <time.h>
 #include <sys/time.h>
 
+#define V3_A0 (1 << 0)
+#define	V3_A1 (1 << 1)
+#define V3_A2 (1 << 2) 
+#define V3_A3 (1 << 3)
+#define	V3_A4 (1 << 4)
+#define	V3_A5 (1 << 5)
+#define	V3_A6 (1 << 6)
+#define	V3_A7 (1 << 7)
+
 typedef struct {
 	char cmd;
-	char motor;
+	char sel;
 	short arg;
 } v3_msg;
+
+typedef struct __attribute__ ((__packed__)) {
+	char status;
+	unsigned short data;
+} v3_response;
 
 typedef struct {
 	short current_value;
@@ -39,6 +53,8 @@ typedef struct {
 typedef enum { RIGHT=0, LEFT } v3_side;
 
 int v3_open();
+void v3_analog_inputs_enable(unsigned short bits);
+int v3_analog_read(int input);
 void v3_launch_init_script();
 int v3_servo_set(int servo_id, short value);
 int v3_servo_disconnect(int servo_id);
