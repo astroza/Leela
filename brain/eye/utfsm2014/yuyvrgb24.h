@@ -16,28 +16,10 @@
  *  along with Leela. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "navig_script.h"
+#ifndef YUYVRGB24_H
+#define YUYVRGB24_H
 
-extern "C" {
-#include <v3.h>
-}
+void v4lconvert_yuyv_to_rgb24(const unsigned char *, unsigned char *, int, int);
 
-#include <unistd.h>
+#endif
 
-int main()
-{
-	AutomataControl control;
-	Navig navig;
-	Picker picker;
-	NavigScript ns(&navig, &picker);
-
-	ns.open("/dev/stdin");
-	control.jump(&ns);
-
-	while(control.do_step() != -1) {
-		usleep(100000);
-		v3_work();
-	}
-
-	return 0;
-}

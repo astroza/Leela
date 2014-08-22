@@ -16,28 +16,38 @@
  *  along with Leela. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "navig_script.h"
+#ifndef DEBUG_H
+#define DEBUG_H
 
-extern "C" {
-#include <v3.h>
-}
+#include "config.h"
+#include <semaphore.h>
+#include <fstream>
 
-#include <unistd.h>
+using namespace std;
 
-int main()
-{
-	AutomataControl control;
-	Navig navig;
-	Picker picker;
-	NavigScript ns(&navig, &picker);
+#define IMAGE_SENDER_CHUNK_SIZE 25*1024
 
-	ns.open("/dev/stdin");
-	control.jump(&ns);
+class Debug_interp {
+	public:
+		virtual void exec_line(ifstream &input) = 0;
+};
 
-	while(control.do_step() != -1) {
-		usleep(100000);
-		v3_work();
-	}
+class Debug {
+	static Debug *instance;
+	private:
+		sem_t image_sender_wait;
+		sem_t buffer_sender_lock;
+		int client_fd;
+		int server_fd;
+		unsigned char sender_buffer[IMAGE_SIZE];
+		void client_wait_for();
+		void server_init(const char *addr, unsigned short port);
+	public:
+		Debug(Debug_interp *intep);
+		static bool is_enabled();
+		void image_send();
+		void image_try_to_feed(void *image, int size);
+		Debug();
+};
 
-	return 0;
-}
+#endif

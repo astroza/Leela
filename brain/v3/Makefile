@@ -6,4 +6,4 @@ test: test.c
 	$(CC) $? -lv3 -o $@ -lpthread
 
 analog_test: analog_test.c
-	$(CC) $? -lv3 -o $@ -lpthread
+	$(CC) $? -lv3 -o $@ -lpthread -lds -lm

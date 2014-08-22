@@ -24,15 +24,15 @@ int set_servos(int fd, short vel)
 {
 	short i;
 	for(i = 0; i < 4; i++) {
-		v3_servo_set(fd, i, vel);
+		v3_servo_set(i, vel);
 	}
 }
 
-int disconnect_servos(int fd)
+int disconnect_servos()
 {
 	short i;
 	for(i = 0; i < 4; i++) {
-		v3_servo_disconnect(fd, i);
+		v3_servo_disconnect(i);
 	}
 }
 
@@ -60,6 +60,7 @@ int main()
 		for(i = 0; i < 9; i++) {
 			printf("Setting servos to (vel=%d)\n", vels_dir1[i]);
 			set_servos(fd, vels_dir1[i]);
+			v3_work();
 			puts("Please adjust servos if necessary\n\tPress enter to continue");
 			getc(stdin);
 		}
@@ -67,13 +68,14 @@ int main()
                 for(i =	0; i < 9; i++) {
                         printf("Setting servos to (vel=%d)\n", vels_dir2[i]);
                         set_servos(fd, vels_dir2[i]);
+			v3_work();
                         puts("Please adjust servos if necessary\n\tPress enter to continue");
                         getc(stdin);
                 }
 
 		puts("Repeat all again?");
 	} while(getc(stdin) == 'y');
-	disconnect_servos(fd);
+	disconnect_servos();
 
 	return 0;
 }

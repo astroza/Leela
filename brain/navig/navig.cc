@@ -175,12 +175,12 @@ Wheel::Wheel(short vel_id, short angle_id, const SContAdjust &velocity_adjust, c
 	this->power_off_in_rest = power_off_in_rest;
 }
 
-static Wheel wheels[4] = {Wheel(0, 4, SContAdjust(0, -1), S180Adjust(18, 54, 90, 166)), 
-			  Wheel(1, 5, SContAdjust(1, -1), S180Adjust(155, 115, 75, 0)), 
-			  Wheel(2, 6, SContAdjust(0, -1, true), S180Adjust(152, 115, 73, 0)), 
-			  Wheel(3, 7, SContAdjust(0, 0, true), S180Adjust(10, 45, 82, 160))};
+static Wheel wheels[4] = {Wheel(0, 4, SContAdjust(0, 0, true), S180Adjust(125, 80, 43, 0)), 
+			  Wheel(1, 5, SContAdjust(2, 0, true), S180Adjust(38, 70, 112, 180)), 
+			  Wheel(2, 6, SContAdjust(0, -3), S180Adjust(30, 65, 105, 180)), 
+			  Wheel(3, 7, SContAdjust(0, 0), S180Adjust(132, 85, 50, 0))};
 
-static Picker picker = Picker(10, 11, 9, 8);
+// static Picker picker = Picker(10, 11, 9, 8);
 
 bool Navig::ready_to_rotate()
 {
@@ -230,34 +230,34 @@ bool Navig::forward(short velocity, float rudder)
         	wheels[2].angle_set(0);
         	wheels[3].angle_set(0);
 	} else if(rudder > 1.0) { /* right */
-		/* 30 */
+		/* 150 */
 		straight_value = wheels[0].straight_angle_value();
-                wheels[0].raw_angle_set(straight_value - ((straight_value - 30)*(0.5 + 0.5*rudder/100.0)));
-		/* 145 */
+                wheels[0].raw_angle_set(straight_value - ((straight_value - 150)*(0.5 + 0.5*rudder/100.0)));
+		/* 10 */
 		straight_value = wheels[1].straight_angle_value();
-                wheels[1].raw_angle_set(straight_value - ((straight_value - 145)*(0.5 + 0.5*rudder/100.0)));
-		/* 165 */
+                wheels[1].raw_angle_set(straight_value - ((straight_value - 10)*(0.5 + 0.5*rudder/100.0)));
+		/* 60 */
 		straight_value = wheels[2].straight_angle_value();
-                wheels[2].raw_angle_set(straight_value - ((straight_value - 165)*(0.5 + 0.5*rudder/100.0)));
-		/* 0 */
+                wheels[2].raw_angle_set(straight_value - ((straight_value - 60)*(0.5 + 0.5*rudder/100.0)));
+		/* 95 */
 		straight_value = wheels[3].straight_angle_value();
-                wheels[3].raw_angle_set(straight_value - ((straight_value - 0)*(0.5 + 0.5*rudder/100.0)));
+                wheels[3].raw_angle_set(straight_value - ((straight_value - 95)*(0.5 + 0.5*rudder/100.0)));
 
 		/* El lado izquierdo decae en velocidad hasta un 75% */
 		side_factor[0] *= 1-0.25*(rudder/100.0); 
 	} else { /* left */
-		/* 0 */
+		/* 90 */
 		straight_value = wheels[0].straight_angle_value();
-                wheels[0].raw_angle_set(straight_value - ((straight_value - 0)*(0.3 + 0.7*0.01/rudder)));
-		/* 180 */
+                wheels[0].raw_angle_set(straight_value - ((straight_value - 90)*(0.3 + 0.7*0.01/rudder)));
+		/* 70 */
 		straight_value = wheels[1].straight_angle_value();
-                wheels[1].raw_angle_set(straight_value - ((straight_value - 180)*(0.3 + 0.7*0.01/rudder)));
-		/* 135 */
+                wheels[1].raw_angle_set(straight_value - ((straight_value - 70)*(0.3 + 0.7*0.01/rudder)));
+		/* 0 */
 		straight_value = wheels[2].straight_angle_value();
-                wheels[2].raw_angle_set(straight_value - ((straight_value - 135)*(0.3 + 0.7*0.01/rudder)));
-		/* 24 */
+                wheels[2].raw_angle_set(straight_value - ((straight_value - 0)*(0.3 + 0.7*0.01/rudder)));
+		/* 170 */
 		straight_value = wheels[3].straight_angle_value();
-                wheels[3].raw_angle_set(straight_value - ((straight_value - 24)*(0.3 + 0.7*0.01/rudder)));
+                wheels[3].raw_angle_set(straight_value - ((straight_value - 170)*(0.3 + 0.7*0.01/rudder)));
 
 		/* El lado derecho decae en velocidad hasta un 75% */
 		side_factor[1] *= 1-0.25*(0.01/rudder);

@@ -18,6 +18,14 @@
 
 #include "v3.h"
 #include <stdio.h>
+#include <math.h>
+
+int distance(int value)
+{
+	float volts = value*0.00322265625; 
+	float distance = 65*powf(volts, -1.10);
+	return (int)distance;
+}
 
 int main()
 {
@@ -25,7 +33,8 @@ int main()
 	v3_analog_inputs_enable(V3_A0|V3_A1|V3_A2);
 
 	do {
-		printf("value=%d\n", v3_analog_read(0));
+		printf("A0=%d (raw=%d)\n", distance(v3_analog_read(0)), v3_analog_read(0));
+		printf("A1=%d (raw=%d)\n", distance(v3_analog_read(1)), v3_analog_read(1));
 		v3_work();
 		usleep(500000);
 	} while(1);

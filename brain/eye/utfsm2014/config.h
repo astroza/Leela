@@ -16,28 +16,17 @@
  *  along with Leela. If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include "navig_script.h"
+#ifndef CONFIG_H
+#define CONFIG_H
 
-extern "C" {
-#include <v3.h>
-}
+#define BUFFERS_COUNT 4
+#define IMAGE_WIDTH 320
+#define IMAGE_COLUMNS IMAGE_WIDTH
+#define IMAGE_HEIGHT 240
+#define IMAGE_ROWS IMAGE_HEIGHT
+#define IMAGE_SIZE IMAGE_WIDTH*IMAGE_HEIGHT*3
 
-#include <unistd.h>
+#define GRID_ROWS 9
+#define GRID_COLUMNS 9
 
-int main()
-{
-	AutomataControl control;
-	Navig navig;
-	Picker picker;
-	NavigScript ns(&navig, &picker);
-
-	ns.open("/dev/stdin");
-	control.jump(&ns);
-
-	while(control.do_step() != -1) {
-		usleep(100000);
-		v3_work();
-	}
-
-	return 0;
-}
+#endif
