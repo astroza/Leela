@@ -95,11 +95,11 @@ unsigned int depth_sensor_read()
 	return samples_sum/samples_count;
 }
 
-int depth_sensor_v2cm(int sensor_value)
+float depth_sensor_v2cm(int sensor_value)
 {
         float volts = sensor_value*0.00322265625;
         float distance = 65*powf(volts, -1.10);
-        return (int)distance;
+        return distance;
 }
 
 #ifdef UNIT_TEST

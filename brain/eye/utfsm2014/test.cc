@@ -21,8 +21,7 @@
 #include <navig_script.h>
 #include "debug.h"
 #include "eye.h"
-#include "aie.h"
-#include "utfsm.h"
+#include "utfsm14.h"
 #include <timer.h>
 #include <automata.h>
 #include <time.h>
@@ -31,15 +30,9 @@
 #include <climits>
 
 extern "C" {
-#include <v4.h>
+#include <v3.h>
 #include <depth_sensor.h>
-#include <mouse.h>
 }
-
-#define COLUMN_JUMPS            15
-#define ROW_JUMPS               15
-#define GRAY_THRESHOLD          40
-#define LINE_POINTS		
 
 using namespace cv;
 using namespace std;
@@ -48,87 +41,33 @@ static Eye eye;
 static NavigScript navigscript;
 
 
-
 class MainAutomata : public Automata {
-        private:
-		bool fin;
-                Mat src;
-        public:          
-                int do_step();
-                MainAutomata();
-}; 
+	private:
+		Mat src;
+	public:
+		int do_step();
+		MainAutomata();
+};
 
 MainAutomata::MainAutomata()
 {
 	src = Mat(IMAGE_ROWS, IMAGE_COLUMNS, CV_8UC3, (unsigned char *)eye.rgb24_buf);
-	fin = false;
-	depth_sensor_open();
-	pieza_read_min_max();
 }
+
 
 int MainAutomata::do_step()
 {
 	static Timer timer;
-	static Point dst;
-        int x, y, i, pos;
-	float rudder_value;
-        Mat gray_frame;
-	unsigned int v;
-	vector<vector<Point> > pieces;
-	static double start_pos;
-	struct border_info binfo;
-	static int confirmed = 0;
-	Point top_point;
-	bool pieza_present;
-	vector<Point> pieza;
-	bool azul;
+	static Aligner aligner(&navig);
+	int wall_distance = depth_sensor_v2cm(v3_analog_read(0));
+        float obstable_distance_right = depth_sensor_v2cm(v3_analog_read(2));
+  	float obstacle_distance_left = depth_sensor_v2cm(v3_analog_read(3));
+
+	cout << obstable_distance_right << endl << obstacle_distance_left << endl;
 	AUTOM_BEGIN
 
-	v = depth_sensor_read();
-	cout << "V:" << v << endl;
-#if 0
-	cout << "YPOS:" << mouse_y_pos << endl;
-	cout << "XPOS:" << mouse_x_pos << endl;
-#endif
-	cout << "PIEZA AZUL:" << pieza_present << endl;
-	Rescue::road_find(src, pieces, azul);
-	if(pieces.size() > 0) {
-		Rescue::get_border_info(src, pieces, binfo);
+	JUMP(&aligner);
 
-		
-		cout << "DISTANCE: " << binfo.distance << endl;
-		cout << "V SIZE: " << binfo.v_line_size << endl;
-		cout << "V ANGLE" << binfo.v_angle << endl;
-		cout << "PIECES COUNT: " << pieces.size() << endl;
-		cout << "AREA: " << contourArea(pieces[0]) << endl;
-		top_point = Rescue::point_find_nearest(pieces[0], Point(0, 0));
-		cout << "TOP POINT Y: " << top_point.y << endl; 
-		cout << "AZUL: " << azul << endl;
-
-		
-
-/* // CODIGO VIEJO
-	if(pieces.size() > 2 && binfo.v_line_size <= 218) {
-		start_pos = mouse_y_pos;
-		WAIT_WHILE(Rescue::forward_road2(src, &navig, 30) && (mouse_y_pos - start_pos) < 60);
-		WAIT_WHILE(navig.rotate_with_angle(70));
-		start_pos = mouse_y_pos;
-		WAIT_WHILE(navig.forward(50, 0.5) && (mouse_y_pos - start_pos) < 15);
-	} else if(pieces.size() <= 1 && binfo.v_line_size < 200) {
-                start_pos = mouse_y_pos;
-                WAIT_WHILE(Rescue::forward_road2(src, &navig, 20) && (mouse_y_pos - start_pos) < 15);
-		WAIT_WHILE(navig.rotate_with_angle(-45));
-		start_pos = mouse_y_pos;
-		WAIT_WHILE(navig.forward(50, 0.5) && (mouse_y_pos - start_pos) < 5);
-		navig.stop();
-		WAIT_WHILE(navig.rotate_with_angle(-45));
-		explored = false;
-	} else {
-		cout << "NORMAL" << endl;
-		start_pos = mouse_y_pos;
-		WAIT_WHILE(Rescue::forward_road(src, &navig, pieces, 50) && (mouse_y_pos - start_pos) < 5);
-	}*/
-	}
 	reset();
 	AUTOM_END
 
@@ -160,7 +99,10 @@ int main(int c, char **v)
 	eye.cam_open("/dev/video0");
         eye.stream_on();
 	control.jump(&main_automata);
-	navigscript.init(&navig);
+	navigscript.init(&navig, NULL);
+	v3_analog_inputs_enable(V3_A0|V3_A1|V3_A2|V3_A3);
+
+	v3_work();
         do {
             	tv.tv_sec = 5;
                 tv.tv_usec = 0;
@@ -173,7 +115,7 @@ int main(int c, char **v)
                         dropped_frames = 0;
                 } else
                       	dropped_frames++;
-
+		v3_work();
         } while(ret != -1);
 
         return 0;

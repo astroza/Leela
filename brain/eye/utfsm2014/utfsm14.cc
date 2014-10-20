@@ -18,6 +18,8 @@
 
 #include <iostream>
 #include <timer.h>
+#include <stdlib.h> 
+#include <math.h>
 
 extern "C" {
 #include <v3.h>
@@ -39,7 +41,7 @@ bool Aligner::is_increasing(int v)
         if(old_v == -1)
                 old_v = v;
 
-	cout << "Comparing " << v << " with " << old_v << endl;
+	//cout << "Comparing " << v << " with " << old_v << endl;
         if(v >= old_v+2) {
                 old_v = -1;
                 return true;
@@ -54,22 +56,87 @@ bool Aligner::is_increasing(int v)
 int Aligner::do_step()
 {
         static Timer timer;
-        int s0_distance = depth_sensor_v2cm(v3_analog_read(0));
-	cout << "distance = " << s0_distance << endl;
-        AUTOM_BEGIN      
+        float s0_distance = wall_sensor0_distance();
+	float s1_distance = wall_sensor1_distance();
+	float s_diff;
+	int dir;
 
+	s_diff = s0_distance - s1_distance;
+
+       if(s_diff < 0)     
+		dir = 1;
+        else
+            	dir = -1;
+
+        cout << "S_DIFF: " << s_diff << endl;
+        AUTOM_BEGIN
+
+/*
         WAIT_UNTIL(navig->rotate(-10) && is_increasing(s0_distance));
         navig->stop();
-	cout << "TERMINO GIRO DERECHA" << endl;
         WAIT_UNTIL(navig->rotate(10) && is_increasing(s0_distance));
         navig->stop();
-	cout <<	"TERMINO GIRO IZQUIERDA" << endl;
-        timer.start(500);
-        WAIT_WHILE(navig->rotate(-10) && timer.is_running());
-        navig->stop();
-	cout << "TERMINO CORRECCION" << endl;
-
+	// rocket science
+*/
+	WAIT_UNTIL(navig->rotate(10*dir) && fabs(s_diff) <= 1.0);
+	navig->stop();
+	
+/*
+	if(s0_distance > 40) {
+        	timer.start(500);
+        	WAIT_WHILE(navig->rotate(-10) && timer.is_running());
+        	navig->stop();
+	}
+*/
 	return -1;                 
         AUTOM_END
 	return 0;
+}
+
+float wall_sensor0_distance()
+{
+	float s0_distance = depth_sensor_v2cm(v3_analog_read(0));
+	return s0_distance;
+}
+
+float wall_sensor1_distance()
+{
+	float s1_distance = depth_sensor_v2cm(v3_analog_read(1));
+	if(wall_sensor0_distance() >= 24)
+		s1_distance *= cos(0.460579);
+	return s1_distance;
+}
+
+#define NEAR_VALUE 600
+bool obstacle_in_right_side()
+{
+	int s2 = v3_analog_read(2);
+	return s2 > NEAR_VALUE;
+}
+
+bool obstacle_in_left_side()
+{
+	int s3 = v3_analog_read(3);
+	return s3 > NEAR_VALUE;
+}
+
+bool obstacle_in_front()
+{
+	obstacle_in_right_side() || obstacle_in_left_side();
+}
+
+bool forward_with_feedback(Navig *navig, int velocity, int cur_distance, int distance_to_keep)
+{
+	/* 0.1: derecha
+         * 5: izquierda
+         */
+	float rudder = 1.0;
+
+	int diff = distance_to_keep - cur_distance;
+	if(diff <= -2)
+		rudder = 0.1;
+	if(diff >= 2)
+		rudder = 5.0;
+
+	return navig->forward(velocity, rudder);
 }
